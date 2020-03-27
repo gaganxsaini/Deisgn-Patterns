@@ -10,7 +10,8 @@ namespace DesignPatterns
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!!");
+            DesignPatterns.Behavioral.Observer.WeatherStationExample.ExampleCode.Run();
+            Console.Read();
         }
     }
 }
