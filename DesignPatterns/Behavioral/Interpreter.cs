@@ -6,6 +6,129 @@ using System.Threading.Tasks;
 
 namespace DesignPatterns.Behavioral.Interpreter
 {
+    namespace GoFExmaple
+    {
+        //Boolean Expression Evaluation
+
+        public class Context
+        {
+            private readonly Dictionary<string, bool> variables = new Dictionary<string, bool>();
+
+            public bool Lookup(string varName)
+            {
+                if (variables.ContainsKey(varName))
+                    return variables[varName];
+
+                return false;
+            }
+
+            public void Assign(VariableExpression var, bool val) => variables[var.Name] = val;
+        }
+
+        public interface IBooleanExpression
+        {
+            public bool Evaluate(Context context);
+            public IBooleanExpression Replace(string name, IBooleanExpression exp);
+            public IBooleanExpression Copy();
+        }
+
+        public class ConstantExpression : IBooleanExpression
+        {
+            public bool Value { get; }
+            public ConstantExpression(bool val) => Value = val;
+            public bool Evaluate(Context context) => Value;
+
+            public IBooleanExpression Replace(string name, IBooleanExpression exp) => this;
+
+            public IBooleanExpression Copy() => this;
+        }
+
+        public class VariableExpression : IBooleanExpression
+        {
+            public string Name { get; }
+            public VariableExpression(string name) => Name = name;
+            public bool Evaluate(Context context) => context.Lookup(Name);
+
+            public IBooleanExpression Replace(string name, IBooleanExpression exp)
+            {
+                if (String.Equals(name, this.Name))
+                    return exp.Copy();
+                else
+                    return this;
+            }
+
+            public IBooleanExpression Copy() => this;
+        }
+
+        public class AndExpression : IBooleanExpression
+        {
+            public IBooleanExpression Operand1 { get; }
+            public IBooleanExpression Operand2 { get; }
+            public AndExpression(IBooleanExpression op1, IBooleanExpression op2) => (Operand1, Operand2) = (op1, op2);
+            public bool Evaluate(Context context) =>
+                Operand1.Evaluate(context) && Operand2.Evaluate(context);
+
+            public IBooleanExpression Replace(string name, IBooleanExpression exp) => new AndExpression(Operand1.Replace(name, exp), Operand2.Replace(name, exp));
+
+            public IBooleanExpression Copy() => new AndExpression(Operand1.Copy(), Operand2.Copy());
+        }
+
+        public class OrExpression : IBooleanExpression
+        {
+            public IBooleanExpression Operand1 { get; }
+            public IBooleanExpression Operand2 { get; }
+            public OrExpression(IBooleanExpression op1, IBooleanExpression op2) => (Operand1, Operand2) = (op1, op2);
+            public bool Evaluate(Context context) =>
+                Operand1.Evaluate(context) || Operand2.Evaluate(context);
+
+            public IBooleanExpression Replace(string name, IBooleanExpression exp) => new OrExpression(Operand1.Replace(name, exp), Operand2.Replace(name, exp));
+            public IBooleanExpression Copy() => new OrExpression(Operand1.Copy(), Operand2.Copy());
+        }
+
+        public class NotExpression : IBooleanExpression
+        {
+            public IBooleanExpression Operand1 { get; }
+            public NotExpression(IBooleanExpression op1) => Operand1 = op1;
+            public bool Evaluate(Context context) =>
+                !Operand1.Evaluate(context);
+
+            public IBooleanExpression Replace(string name, IBooleanExpression exp) => new NotExpression(Operand1.Replace(name, exp));
+            public IBooleanExpression Copy() => new NotExpression(Operand1.Copy());
+        }
+
+        static class ExampleCode
+        {
+            public static void Run()
+            {
+                IBooleanExpression exp;
+
+                VariableExpression x = new VariableExpression("X");
+                VariableExpression y = new VariableExpression("Y");
+
+                exp = new OrExpression(new AndExpression(new ConstantExpression(true), x),
+                    new AndExpression(y, new NotExpression(x)));
+
+                Context context = new Context();
+                context.Assign(x, false);
+                context.Assign(y, true);
+
+                //(true && x) || (y && (not x))
+                bool result = exp.Evaluate(context);
+
+                Console.WriteLine(result);
+
+                VariableExpression z = new VariableExpression("Z");
+                NotExpression not_z = new NotExpression(z);
+
+                //(true && x) || (!z && (not x))
+                exp = exp.Replace(y.Name, not_z);
+                context.Assign(z, true);
+                result = exp.Evaluate(context);
+                Console.WriteLine(result);
+            }
+        }
+
+    }
 
     namespace IntergerToWords
     {
@@ -117,7 +240,7 @@ namespace DesignPatterns.Behavioral.Interpreter
                 Console.WriteLine("Enter a 3 digit number only (i.e. 100 to 999)");
 
                 string str = "";
-                
+
                 do
                 {
                     str = Console.ReadLine();
