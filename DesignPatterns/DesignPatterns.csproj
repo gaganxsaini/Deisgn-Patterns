@@ -63,6 +63,7 @@
     <Compile Include="Structural\Composite.cs" />
     <Compile Include="Structural\Decorator.cs" />
     <Compile Include="Structural\Facade.cs" />
+    <Compile Include="Structural\Flyweight.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
